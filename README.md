@@ -1,5 +1,5 @@
 # CS5200 Final Project
-# FleetHQ — Food Truck Fleet Management System
+## FleetHQ — Food Truck Fleet Management System
 
 > A full-stack web application for managing and optimizing operations for a fleet of food trucks — built for CS 5200 Database Management Systems.
 
@@ -12,9 +12,9 @@
 
 - GitHub: Julia Kim - [@juliahnkim (https://github.com/juliahnkim)]
 
-- GitHub: Reva Kakaria -
+- GitHub: Reva Kakaria - [@rkakaria (https://github.com/rkakaria)]
 
-- Github: Emily Huang -
+- Github: Emily Huang - [@ (https://github.com/)]
 
 
 ---
@@ -29,48 +29,24 @@ The FleetHQ Food Truck Fleet Management System is a comprehensive database-backe
 - 🧾 Manages the full order lifecycle from placement to completion
 - 👥 Maintains customer loyalty profiles and tier rewards
 - 🎪 Coordinates event bookings and staff certifications
-- 📈 Provides business intelligence queries from Phase 2
+- 📈 Provides business intelligence queries 
 
-### Built With
  
-**Database Layer:**
-- [MySQL 8.0](https://www.mysql.com/) — Relational database deployed on Google Cloud Platform
-- [Google Cloud Platform](https://cloud.google.com/) — Compute Engine VM + App Engine hosting
- 
-**Backend:**
-- [Python 3.9](https://www.python.org/) — Server-side language
-- [Flask 3.0](https://flask.palletsprojects.com/) — Lightweight web framework
-- [mysql-connector-python](https://dev.mysql.com/doc/connector-python/en/) — MySQL driver
-- [Flask-CORS](https://flask-cors.readthedocs.io/) — Cross-origin resource sharing
-- [Gunicorn](https://gunicorn.org/) — Production WSGI server
- 
-**Frontend:**
-- [React 18](https://react.dev/) — UI library
-- [TypeScript](https://www.typescriptlang.org/) — Type-safe JavaScript
-- [Vite 5](https://vitejs.dev/) — Lightning-fast build tool
-- [React Router v6](https://reactrouter.com/) — Client-side routing
-- [TanStack Query v5](https://tanstack.com/query) — Server state management
-- [Chart.js + react-chartjs-2](https://www.chartjs.org/) — Data visualization
+## Tech Stack
+- **Database:** PostgreSQL 18 (Cloud SQL)
+- **Backend:** Python 3.12 + Flask
+- **Frontend:** React + TypeScript + Vite
+- **Deployment:** Google App Engine
  
 ---
 
 ## ✨ Features
  
-### Current Features
-- ✅ Full CRUD for all 10 entities (Trucks, Locations, Schedules, Orders, Menu, Inventory, Customers, Staff, Events, Analytics)
-- ✅ Live dashboard with Chart.js bar and doughnut charts
-- ✅ Low stock alerts and certification expiry warnings
-- ✅ Search and filter across all tables
-- ✅ Responsive light theme UI with teal accents
-- ✅ Analytics page running 8 complex SQL queries from Phase 2
-- ✅ Interactive calendar widget in the sidebar
-- ✅ Revenue, profit margin, and customer retention queries
+- Complete CRUD operations for trucks, menus, orders, customers
+- Automated business logic via database triggers
+- Real-time analytics dashboard
+- Cloud deployment on Google Cloud Platform
  
-### Planned Features
-- 🔜 Real-time truck location map (GPS integration)
-- 🔜 Permit and compliance tracking
-- 🔜 Staff scheduling calendar view
-- 🔜 Mobile app for truck operators
  
 ---
 
@@ -97,9 +73,8 @@ Before you begin, ensure you have the following installed:
   ```
   Download: [https://www.python.org/](https://www.python.org/)
  
-- **MySQL 8.0** (local or GCP Compute Engine VM)
-  - [MySQL Community Edition](https://dev.mysql.com/downloads/) (local)
-  - [Google Cloud Platform](https://cloud.google.com/) (cloud)
+- **Postgres** (local or GCP Compute Engine VM)
+- [Google Cloud Platform](https://cloud.google.com/) (cloud)
  
 - **Git**
   ```bash
@@ -131,36 +106,7 @@ Before you begin, ensure you have the following installed:
    pip install -r requirements.txt
    ```
  
-4. **Configure Environment Variables**
- 
-   Create a `.env` file in the `fleethq/` backend directory:
-   ```env
-   # MySQL Database
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_USER=foodtruck_admin
-   DB_PASSWORD=your_secure_password_here
-   DB_NAME=food_truck_db
- 
-   # Flask
-   SECRET_KEY=generate-a-random-string-here
-   FLASK_DEBUG=True
- 
-   # CORS (allow React dev server)
-   CORS_ORIGINS=http://localhost:3000,http://localhost:5173
-   ```
- 
-5. **Set Up the Database**
- 
-   ```bash
-   # Create schema (all 13 tables)
-   mysql -u foodtruck_admin -p food_truck_db < sql/schema.sql
- 
-   # Load sample data
-   mysql -u foodtruck_admin -p food_truck_db < sql/seed.sql
-   ```
- 
----
+
  
 ## 🎮 Running the Application
  
@@ -266,48 +212,28 @@ All list endpoints support `?q=search_term` for filtering.
  
 ```
 FleetHQ/
-├── fleethq/                    # Flask backend
-│   ├── app.py                  # Entry point, registers all blueprints
-│   ├── config.py               # Environment-based configuration
-│   ├── db.py                   # MySQL connection helper
-│   ├── requirements.txt        # Python dependencies
-│   ├── app.yaml                # GCP App Engine deployment config
-│   ├── sql/
-│   │   ├── schema.sql          # Full MySQL schema (13 tables)
-│   │   └── seed.sql            # Sample data
-│   └── routes/
-│       ├── trucks.py           # /api/trucks CRUD
-│       ├── operations.py       # /api/locations, /api/schedules, /api/orders
-│       ├── people_ops.py       # /api/menu, /api/inventory, /api/customers, /api/staff, /api/events
-│       └── analytics.py        # /api/analytics — Phase 2 complex queries
-│
-└── fleet-hq/
-    └── frontend/               # React + TypeScript frontend
-        ├── index.html
-        ├── package.json
-        ├── vite.config.ts      # Proxies /api/* to Flask on :8080
-        ├── tsconfig.json
-        └── src/
-            ├── main.tsx        # Entry point
-            ├── App.tsx         # Router + providers
-            ├── types/          # TypeScript types for all DB tables
-            ├── api/            # Typed fetch calls for every endpoint
-            ├── hooks/          # useCrud — shared CRUD + search logic
-            ├── styles/         # CSS variables (light teal theme)
-            ├── components/
-            │   ├── ui.tsx      # Pill, Button, DataTable, Modal, Toast…
-            │   └── Layout.tsx  # IconSidebar, LeftPanel, TopBar
-            └── pages/
-                ├── Dashboard.tsx
-                ├── Trucks.tsx
-                ├── Orders.tsx
-                ├── Customers.tsx
-                ├── Inventory.tsx
-                ├── Menu.tsx
-                ├── Staff.tsx
-                ├── Analytics.tsx
-                └── FleetPages.tsx  # Locations, Schedules, Events
-```
+├── src/
+│   ├── components/
+│   │   ├── Header.tsx              # Navigation header
+│   │   └── Utility.tsx             # Toast, Loading, EmptyState, etc.
+│   ├── pages/
+│   │   ├── LandingPage.tsx        # Get started 
+│   │   ├── Dashboard.tsx          # Stats dashboard
+│   │   ├── TruckList.tsx          # Truck management (FULL CRUD)
+│   │   ├── TruckForm.tsx          # Add/Edit truck form
+│   │   ├── MenuList.tsx           # Menu management
+│   │   └── OtherPages.tsx         # Orders, Customers, etc.
+│   ├── utils/
+│   │   └── hooks.ts               # Custom hooks (useToast, useAPI)
+│   ├── styles/
+│   │   └── main.css               # Complete styling system
+│   ├── App.tsx                    # Main app with routing
+│   └── main.tsx                   # React entry point
+├── index.html                     # HTML template
+├── package.json                   # Dependencies
+├── vite.config.ts                 # Vite configuration
+├── tsconfig.json                  # TypeScript config
+└── README.md                      # This file
  
 ---
  

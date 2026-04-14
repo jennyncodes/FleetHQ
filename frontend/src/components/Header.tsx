@@ -49,7 +49,7 @@ export default function Header() {
           alignItems: 'center',
           gap: '0.5rem'
         }}>
-          <span style={{ fontSize: '2rem' }}>🚚</span>
+          <span style={{ fontSize: '2rem' }}></span>
           Fleet HQ
         </Link>
 
