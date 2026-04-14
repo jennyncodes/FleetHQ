@@ -1,49 +1,81 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ToastProvider } from './components/ui';
-import { IconSidebar, LeftPanel } from './components/Layout';
-import Dashboard     from './pages/Dashboard';
-// import TrucksPage    from './pages/Trucks';
-// import OrdersPage    from './pages/Orders';
-// import CustomersPage from './pages/Customers';
-// import InventoryPage from './pages/Inventory';
-// import MenuPage      from './pages/Menu';
-// import StaffPage     from './pages/Staff';
-// import AnalyticsPage from './pages/Analytics';
-// import { LocationsPage, SchedulesPage, EventsPage } from './pages/FleetPages';
+// App.tsx
+// Main application with routing
 
-const qc = new QueryClient({
-  defaultOptions: {
-    queries: { retry: 1, staleTime: 30_000 },
-  },
-})
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Header from './components/Header';
+import LandingPage from './pages/LandingPage';
+import Dashboard from './pages/Dashboard';
+import TruckList from './pages/TruckList';
+import TruckForm from './pages/TruckForm';
+import MenuList from './pages/MenuList';
+import {
+  MenuForm,
+  OrderList,
+  OrderForm,
+  CustomerList,
+  CustomerForm,
+  ScheduleList,
+  InventoryList,
+  Analytics
+} from './pages/OtherPages';
+import './styles/main.css';
 
 export default function App() {
   return (
-    <QueryClientProvider client={qc}>
-      <ToastProvider>
-        <BrowserRouter>
-          <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-            <IconSidebar />
-            <LeftPanel />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-              <Routes>
-                <Route path="/"          element={<Dashboard />} />
-                {/* <Route path="/trucks"    element={<TrucksPage />} />
-                <Route path="/schedules" element={<SchedulesPage />} />
-                <Route path="/locations" element={<LocationsPage />} />
-                <Route path="/orders"    element={<OrdersPage />} />
-                <Route path="/menu"      element={<MenuPage />} />
-                <Route path="/inventory" element={<InventoryPage />} />
-                <Route path="/customers" element={<CustomersPage />} />
-                <Route path="/staff"     element={<StaffPage />} />
-                <Route path="/events"    element={<EventsPage />} />
-                <Route path="/analytics" element={<AnalyticsPage />} /> */}
-              </Routes>
-            </div>
-          </div>
-        </BrowserRouter>
-      </ToastProvider>
-    </QueryClientProvider>
-  )
+    <Router>
+      <div className="app">
+        <Routes>
+          {/* Landing page without header */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* All other routes with header */}
+          <Route path="/*" element={<AppWithHeader />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
+// Wrapper component for routes that need header
+function AppWithHeader() {
+  return (
+    <>
+      <Header />
+      <main>
+        <Routes>
+          {/* Dashboard */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          
+          {/* Trucks */}
+          <Route path="/trucks" element={<TruckList />} />
+          <Route path="/trucks/new" element={<TruckForm />} />
+          <Route path="/trucks/edit/:id" element={<TruckForm />} />
+          
+          {/* Menu */}
+          <Route path="/menu" element={<MenuList />} />
+          <Route path="/menu/new" element={<MenuForm />} />
+          <Route path="/menu/edit/:id" element={<MenuForm />} />
+          
+          {/* Orders */}
+          <Route path="/orders" element={<OrderList />} />
+          <Route path="/orders/new" element={<OrderForm />} />
+          <Route path="/orders/edit/:id" element={<OrderForm />} />
+          
+          {/* Customers */}
+          <Route path="/customers" element={<CustomerList />} />
+          <Route path="/customers/new" element={<CustomerForm />} />
+          <Route path="/customers/edit/:id" element={<CustomerForm />} />
+          
+          {/* Schedule */}
+          <Route path="/schedule" element={<ScheduleList />} />
+          
+          {/* Inventory */}
+          <Route path="/inventory" element={<InventoryList />} />
+          
+          {/* Analytics */}
+          <Route path="/analytics" element={<Analytics />} />
+        </Routes>
+      </main>
+    </>
+  );
 }
