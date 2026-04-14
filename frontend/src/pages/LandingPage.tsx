@@ -1,5 +1,5 @@
 // LandingPage.tsx
-// Beautiful landing page with animated illustrations and blobs
+// Beautiful landing page with LARGE peachy blobs and illustrations
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -15,10 +15,14 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
-      {/* Animated Background Blobs */}
+      {/* LARGE Peachy Blobs - Like Presentation */}
       <div className="background-blobs">
+        <div className="blob blob-1"></div>
         <div className="blob blob-2"></div>
         <div className="blob blob-3"></div>
+        <div className="blob blob-4"></div>
+        <div className="blob blob-5"></div>
+        <div className="blob blob-6"></div>
       </div>
 
       {/* Floating Illustrations */}

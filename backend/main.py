@@ -1,4 +1,3 @@
-# main.py
 # Flask backend for FleetHQ Food Truck Management System
 
 from flask import Flask, request, jsonify
@@ -11,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app)  # Enable CORS for React frontend
 
 # Database connection configuration
 DB_CONFIG = {
@@ -31,125 +30,229 @@ def get_db_connection():
         print(f"Database connection error: {e}")
         raise
 
-# ==================== HEALTH CHECK ====================
-
+# Health check endpoint
 @app.route('/')
 def home():
-    """Health check endpoint"""
-    return jsonify({
-        'status': 'online',
-        'message': 'FleetHQ API is running',
-        'version': '1.0',
-        'timestamp': datetime.now().isoformat()
-    })
-
+    return jsonify({"status": "FleetHQ Backend is running"}), 200
+ 
 @app.route('/api/health')
 def health_check():
-    """Detailed health check with database connection test"""
+    """Check database connectivity"""
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT 1')
-        cursor.close()
+        cur = conn.cursor()
+        cur.execute('SELECT 1')
+        cur.close()
+        conn.close()
+        return jsonify({"status": "healthy", "database": "connected"}), 200
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "error": str(e)}), 500
+ 
+# ==================== DASHBOARD ENDPOINT ====================
+ 
+@app.route('/api/dashboard/stats', methods=['GET'])
+def get_dashboard_stats():
+    """Get comprehensive dashboard statistics"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        stats = {}
+        
+        # 1. Total Trucks
+        cur.execute("SELECT COUNT(*) FROM food_truck")
+        stats['total_trucks'] = cur.fetchone()[0]
+        
+        # 2. Active Trucks
+        cur.execute("SELECT COUNT(*) FROM food_truck WHERE status = 'Active'")
+        stats['active_trucks'] = cur.fetchone()[0]
+        
+        # 3. Total Orders
+        cur.execute("SELECT COUNT(*) FROM orders")
+        stats['total_orders'] = cur.fetchone()[0]
+        
+        # 4. Total Revenue - using exact enum value 'Completed'
+        cur.execute("""
+            SELECT COALESCE(SUM(total_amount), 0) 
+            FROM orders 
+            WHERE status = 'Completed'
+        """)
+        stats['total_revenue'] = float(cur.fetchone()[0])
+        
+        # 5. Pending Orders - using exact enum value 'Pending'
+        cur.execute("""
+            SELECT COUNT(*) 
+            FROM orders 
+            WHERE status = 'Pending'
+        """)
+        stats['pending_orders'] = cur.fetchone()[0]
+        
+        # 6. Total Customers
+        cur.execute("SELECT COUNT(*) FROM customer")
+        stats['total_customers'] = cur.fetchone()[0]
+        
+        # 7. Today's Orders
+        cur.execute("SELECT COUNT(*) FROM orders WHERE order_date = CURRENT_DATE")
+        stats['todays_orders'] = cur.fetchone()[0]
+        
+        # 8. Completed Orders - using exact enum value 'Completed'
+        cur.execute("""
+            SELECT COUNT(*) 
+            FROM orders 
+            WHERE status = 'Completed'
+        """)
+        stats['completed_orders'] = cur.fetchone()[0]
+        
+        # 9. Recent Activity - last 5 orders with details
+        # Using email instead of customer_name since customer table has no name column
+        cur.execute("""
+            SELECT 
+                o.order_id,
+                o.order_date,
+                CAST(o.status AS TEXT) as status,
+                o.total_amount,
+                c.email as customer_email,
+                f.truck_name
+            FROM orders o
+            JOIN customer c ON o.customer_id = c.customer_id
+            JOIN food_truck f ON o.truck_id = f.truck_id
+            ORDER BY o.order_date DESC
+            LIMIT 5
+        """)
+        
+        recent_orders = []
+        for row in cur.fetchall():
+            recent_orders.append({
+                'order_id': row[0],
+                'order_date': row[1].isoformat() if row[1] else None,
+                'order_status': row[2],
+                'total_amount': float(row[3]),
+                'customer_name': row[4],  # This is actually email, but frontend expects customer_name
+                'truck_name': row[5]
+            })
+        
+        stats['recent_activity'] = recent_orders
+        
+        cur.close()
         conn.close()
         
-        return jsonify({
-            'status': 'healthy',
-            'database': 'connected',
-            'timestamp': datetime.now().isoformat()
-        })
+        return jsonify(stats), 200
+        
     except Exception as e:
-        return jsonify({
-            'status': 'unhealthy',
-            'database': 'disconnected',
-            'error': str(e),
-            'timestamp': datetime.now().isoformat()
-        }), 500
-
-# ==================== TRUCKS API ====================
-
+        print(f"Error fetching dashboard stats: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+ 
+# ==================== TRUCKS ENDPOINTS ====================
+ 
 @app.route('/api/trucks', methods=['GET'])
 def get_trucks():
-    """Get all trucks"""
+    """Get all trucks - only selecting columns that exist"""
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor()
         
-        cursor.execute("""
-            SELECT truck_id, truck_name, cuisine_type, status, license_plate, 
-                   created_at, updated_at
-            FROM FoodTrucks
+        # Only select columns that actually exist in food_truck table
+        cur.execute("""
+            SELECT truck_id, truck_name, cuisine_type, 
+                   CAST(status AS TEXT) as status, license_plate
+            FROM food_truck
             ORDER BY truck_id
         """)
         
-        trucks = cursor.fetchall()
-        cursor.close()
+        trucks = []
+        for row in cur.fetchall():
+            trucks.append({
+                'truck_id': row[0],
+                'truck_name': row[1],
+                'cuisine_type': row[2],
+                'status': row[3],
+                'license_plate': row[4]
+            })
+        
+        cur.close()
         conn.close()
         
-        return jsonify(trucks)
+        return jsonify(trucks), 200
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+        print(f"Error fetching trucks: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+ 
 @app.route('/api/trucks/<int:truck_id>', methods=['GET'])
 def get_truck(truck_id):
     """Get a specific truck by ID"""
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor()
         
-        cursor.execute("""
-            SELECT truck_id, truck_name, cuisine_type, status, license_plate,
-                   created_at, updated_at
-            FROM FoodTrucks
+        cur.execute("""
+            SELECT truck_id, truck_name, cuisine_type, 
+                   CAST(status AS TEXT) as status, license_plate
+            FROM food_truck
             WHERE truck_id = %s
         """, (truck_id,))
         
-        truck = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        row = cur.fetchone()
         
-        if truck:
-            return jsonify(truck)
+        if row:
+            truck = {
+                'truck_id': row[0],
+                'truck_name': row[1],
+                'cuisine_type': row[2],
+                'status': row[3],
+                'license_plate': row[4]
+            }
+            cur.close()
+            conn.close()
+            return jsonify(truck), 200
         else:
-            return jsonify({'error': 'Truck not found'}), 404
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Truck not found"}), 404
+            
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+        print(f"Error fetching truck: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
 @app.route('/api/trucks', methods=['POST'])
 def create_truck():
     """Create a new truck"""
     try:
         data = request.get_json()
         
-        # Validate required fields
-        required_fields = ['truck_name', 'cuisine_type', 'license_plate']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({'error': f'Missing required field: {field}'}), 400
-        
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor()
         
-        cursor.execute("""
-            INSERT INTO FoodTrucks (truck_name, cuisine_type, status, license_plate)
+        # Only insert columns that exist
+        cur.execute("""
+            INSERT INTO food_truck (truck_name, cuisine_type, status, license_plate)
             VALUES (%s, %s, %s, %s)
-            RETURNING truck_id, truck_name, cuisine_type, status, license_plate, created_at
+            RETURNING truck_id
         """, (
-            data['truck_name'],
-            data['cuisine_type'],
+            data.get('truck_name'),
+            data.get('cuisine_type'),
             data.get('status', 'Active'),
-            data['license_plate']
+            data.get('license_plate')
         ))
         
-        new_truck = cursor.fetchone()
+        truck_id = cur.fetchone()[0]
         conn.commit()
-        cursor.close()
+        
+        cur.close()
         conn.close()
         
-        return jsonify(new_truck), 201
+        return jsonify({"message": "Truck created successfully", "truck_id": truck_id}), 201
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+        print(f"Error creating truck: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+ 
 @app.route('/api/trucks/<int:truck_id>', methods=['PUT'])
 def update_truck(truck_id):
     """Update an existing truck"""
@@ -157,145 +260,55 @@ def update_truck(truck_id):
         data = request.get_json()
         
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor()
         
-        # Build dynamic update query
-        update_fields = []
-        values = []
-        
-        if 'truck_name' in data:
-            update_fields.append('truck_name = %s')
-            values.append(data['truck_name'])
-        if 'cuisine_type' in data:
-            update_fields.append('cuisine_type = %s')
-            values.append(data['cuisine_type'])
-        if 'status' in data:
-            update_fields.append('status = %s')
-            values.append(data['status'])
-        if 'license_plate' in data:
-            update_fields.append('license_plate = %s')
-            values.append(data['license_plate'])
-        
-        update_fields.append('updated_at = CURRENT_TIMESTAMP')
-        values.append(truck_id)
-        
-        query = f"""
-            UPDATE FoodTrucks
-            SET {', '.join(update_fields)}
+        # Only update columns that exist
+        cur.execute("""
+            UPDATE food_truck
+            SET truck_name = %s,
+                cuisine_type = %s,
+                status = %s,
+                license_plate = %s
             WHERE truck_id = %s
-            RETURNING truck_id, truck_name, cuisine_type, status, license_plate, updated_at
-        """
+        """, (
+            data.get('truck_name'),
+            data.get('cuisine_type'),
+            data.get('status'),
+            data.get('license_plate'),
+            truck_id
+        ))
         
-        cursor.execute(query, values)
-        updated_truck = cursor.fetchone()
         conn.commit()
-        cursor.close()
+        
+        cur.close()
         conn.close()
         
-        if updated_truck:
-            return jsonify(updated_truck)
-        else:
-            return jsonify({'error': 'Truck not found'}), 404
+        return jsonify({"message": "Truck updated successfully"}), 200
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+        print(f"Error updating truck: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
 @app.route('/api/trucks/<int:truck_id>', methods=['DELETE'])
 def delete_truck(truck_id):
     """Delete a truck"""
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cur = conn.cursor()
         
-        cursor.execute("""
-            DELETE FROM FoodTrucks
-            WHERE truck_id = %s
-        """, (truck_id,))
+        cur.execute("DELETE FROM food_truck WHERE truck_id = %s", (truck_id,))
         
-        deleted_count = cursor.rowcount
         conn.commit()
-        cursor.close()
+        
+        cur.close()
         conn.close()
         
-        if deleted_count > 0:
-            return jsonify({'message': 'Truck deleted successfully'}), 200
-        else:
-            return jsonify({'error': 'Truck not found'}), 404
+        return jsonify({"message": "Truck deleted successfully"}), 200
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# ==================== DASHBOARD STATS ====================
-
-@app.route('/api/dashboard/stats', methods=['GET'])
-def get_dashboard_stats():
-    """Get dashboard statistics"""
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
-        
-        # Get truck counts
-        cursor.execute("""
-            SELECT 
-                COUNT(*) as total_trucks,
-                COUNT(*) FILTER (WHERE status = 'Active') as active_trucks,
-                COUNT(*) FILTER (WHERE status = 'Inactive') as inactive_trucks
-            FROM FoodTrucks
-        """)
-        truck_stats = cursor.fetchone()
-        
-        # Get order counts (if Orders table exists)
-        try:
-            cursor.execute("""
-                SELECT 
-                    COUNT(*) as total_orders,
-                    COUNT(*) FILTER (WHERE order_status = 'Pending') as pending_orders,
-                    COUNT(*) FILTER (WHERE order_status = 'Completed') as completed_orders,
-                    COALESCE(SUM(total_amount), 0) as total_revenue,
-                    COUNT(*) FILTER (WHERE DATE(order_time) = CURRENT_DATE) as today_orders
-                FROM Orders
-            """)
-            order_stats = cursor.fetchone()
-        except:
-            order_stats = {
-                'total_orders': 0,
-                'pending_orders': 0,
-                'completed_orders': 0,
-                'total_revenue': 0,
-                'today_orders': 0
-            }
-        
-        # Get customer count (if Customers table exists)
-        try:
-            cursor.execute("SELECT COUNT(*) as total_customers FROM Customers")
-            customer_stats = cursor.fetchone()
-        except:
-            customer_stats = {'total_customers': 0}
-        
-        cursor.close()
-        conn.close()
-        
-        # Combine all stats
-        stats = {
-            **truck_stats,
-            **order_stats,
-            **customer_stats
-        }
-        
-        return jsonify(stats)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# ==================== ERROR HANDLERS ====================
-
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({'error': 'Endpoint not found'}), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({'error': 'Internal server error'}), 500
-
-# ==================== RUN APPLICATION ====================
-
+        print(f"Error deleting truck: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
 if __name__ == '__main__':
-    # For local development
     app.run(host='0.0.0.0', port=8080, debug=True)
+ 

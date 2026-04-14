@@ -1,197 +1,343 @@
-// pages/Dashboard.tsx
-// Main dashboard with statistics and overview
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { StatCard, Loading } from '../components/Utility';
+const API_BASE_URL = 'https://db-group4-492222.wl.r.appspot.com';
 
 interface DashboardStats {
-  totalTrucks: number;
-  activeTrucks: number;
-  inactiveTrucks: number;
-  totalOrders: number;
-  pendingOrders: number;
-  completedOrders: number;
-  totalCustomers: number;
-  totalRevenue: number;
-  todayOrders: number;
+  total_trucks: number;
+  active_trucks: number;
+  total_orders: number;
+  total_revenue: number;
+  pending_orders: number;
+  total_customers: number;
+  todays_orders: number;
+  completed_orders: number;
+  recent_activity: RecentOrder[];
+}
+
+interface RecentOrder {
+  order_id: number;
+  order_date: string;
+  order_status: string;
+  total_amount: number;
+  customer_name: string;
+  truck_name: string;
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalTrucks: 0,
-    activeTrucks: 0,
-    inactiveTrucks: 0,
-    totalOrders: 0,
-    pendingOrders: 0,
-    completedOrders: 0,
-    totalCustomers: 0,
-    totalRevenue: 0,
-    todayOrders: 0
-  });
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch dashboard stats
-    // In a real app, you'd have a /api/dashboard/stats endpoint
-    fetchStats();
+    fetchDashboardStats();
   }, []);
 
-  const fetchStats = async () => {
+  const fetchDashboardStats = async () => {
     try {
-      // Simulate API call - replace with actual API calls
-      setTimeout(() => {
-        setStats({
-          totalTrucks: 8,
-          activeTrucks: 6,
-          inactiveTrucks: 2,
-          totalOrders: 147,
-          pendingOrders: 12,
-          completedOrders: 132,
-          totalCustomers: 456,
-          totalRevenue: 15847.50,
-          todayOrders: 23
-        });
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
+      setLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/api/dashboard/stats`);
+      setStats(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Completed':
+        return '#4CAF50';
+      case 'Pending':
+        return '#FF9800';
+      case 'Cancelled':
+        return '#F44336';
+      default:
+        return '#9E9E9E';
+    }
+  };
+
   if (loading) {
-    return <Loading message="Loading dashboard..." />;
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h2 style={{ color: '#D87B2A' }}>Loading dashboard...</h2>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h2 style={{ color: '#F44336' }}>Error</h2>
+        <p>{error}</p>
+        <button
+          onClick={fetchDashboardStats}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#D87B2A',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            marginTop: '20px',
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return null;
   }
 
   return (
-    <div style={{ padding: 'var(--spacing-xl)' }}>
-      {/* Background */}
-      <div className="background-blobs">
-        <div className="blob blob-1"></div>
-        <div className="blob blob-2"></div>
-      </div>
-
-      {/* Header */}
-      <div className="fade-in-up" style={{ marginBottom: 'var(--spacing-lg)' }}>
-        <h1>Dashboard</h1>
-        <p style={{ fontSize: '1.1rem', color: 'var(--gray-medium)' }}>
-          Welcome to FleetHQ! Here's your fleet overview.
-        </p>
-      </div>
+    <div style={{ padding: '30px' }}>
+      <h1 style={{ fontSize: '2.5rem', color: '#D87B2A', marginBottom: '10px' }}>
+        Dashboard
+      </h1>
+      <p style={{ color: '#666', marginBottom: '30px' }}>
+        Welcome to FleetHQ! Here's your fleet overview.
+      </p>
 
       {/* Quick Actions */}
-      <div className="card fade-in-up" style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Quick Actions</h3>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 'var(--spacing-sm)'
-        }}>
-          <button 
-            className="btn btn-primary"
-            onClick={() => navigate('/trucks/new')}
-          >
-            + Add New Truck
-          </button>
-          <button 
-            className="btn btn-primary"
-            onClick={() => navigate('/orders/new')}
-          >
-            + New Order
-          </button>
-          <button 
-            className="btn btn-primary"
-            onClick={() => navigate('/menu/new')}
-          >
-            + Add Menu Item
-          </button>
-          <button 
-            className="btn btn-secondary"
-            onClick={() => navigate('/schedule')}
-          >
-            📅 View Schedule
-          </button>
-          <button 
-            className="btn btn-secondary"
-            onClick={() => navigate('/inventory')}
-          >
-            📦 Check Inventory
-          </button>
-          <button 
-            className="btn btn-secondary"
-            onClick={() => navigate('/analytics')}
-          >
-            📈 View Analytics
-          </button>
+      <div
+        style={{
+          backgroundColor: 'white',
+          padding: '30px',
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          marginBottom: '30px',
+        }}
+      >
+        <h2 style={{ fontSize: '1.5rem', color: '#D87B2A', marginBottom: '20px' }}>
+          Quick Actions
+        </h2>
+        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+          <button className="action-btn-filled">+ Add New Truck</button>
+          <button className="action-btn-filled">+ New Order</button>
+          <button className="action-btn-filled">+ Add Menu Item</button>
+          <button className="action-btn-outline">📅 View Schedule</button>
+          <button className="action-btn-outline">📦 Check Inventory</button>
+          <button className="action-btn-outline">📊 View Analytics</button>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="dashboard-grid" style={{ marginBottom: 'var(--spacing-xl)' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '20px',
+          marginBottom: '30px',
+        }}
+      >
         <StatCard
-          label="Total Trucks"
-          value={stats.totalTrucks}
+          title="TOTAL TRUCKS"
+          value={stats.total_trucks}
           icon="🚚"
-          index={0}
+          color="#D87B2A"
         />
         <StatCard
-          label="Active Trucks"
-          value={stats.activeTrucks}
+          title="ACTIVE TRUCKS"
+          value={stats.active_trucks}
           icon="✅"
           color="#4CAF50"
-          index={1}
         />
         <StatCard
-          label="Total Orders"
-          value={stats.totalOrders}
-          icon="📦"
-          index={2}
+          title="TOTAL ORDERS"
+          value={stats.total_orders}
+          icon="🍔"
+          color="#D87B2A"
         />
         <StatCard
-          label="Total Revenue"
-          value={`$${stats.totalRevenue.toFixed(2)}`}
+          title="TOTAL REVENUE"
+          value={formatCurrency(stats.total_revenue)}
           icon="💰"
-          index={3}
+          color="#FFB300"
         />
         <StatCard
-          label="Pending Orders"
-          value={stats.pendingOrders}
+          title="PENDING ORDERS"
+          value={stats.pending_orders}
           icon="⏳"
           color="#FF9800"
-          index={4}
         />
         <StatCard
-          label="Customers"
-          value={stats.totalCustomers}
+          title="CUSTOMERS"
+          value={stats.total_customers}
           icon="👥"
-          index={5}
-        />
-        <StatCard
-          label="Today's Orders"
-          value={stats.todayOrders}
-          icon="📈"
           color="#2196F3"
-          index={6}
         />
         <StatCard
-          label="Completed Orders"
-          value={stats.completedOrders}
+          title="TODAY'S ORDERS"
+          value={stats.todays_orders}
+          icon="📝"
+          color="#03A9F4"
+        />
+        <StatCard
+          title="COMPLETED ORDERS"
+          value={stats.completed_orders}
           icon="✓"
-          color="#4CAF50"
-          index={7}
+          color="#66BB6A"
         />
       </div>
 
-      
+      {/* Recent Activity */}
+      <div
+        style={{
+          backgroundColor: 'white',
+          padding: '30px',
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          border: '2px solid #D87B2A',
+        }}
+      >
+        <h2 style={{ fontSize: '1.5rem', color: '#D87B2A', marginBottom: '20px' }}>
+          Recent Activity
+        </h2>
 
-      {/* Recent Activity (Placeholder) */}
-      <div className="card fade-in-up">
-        <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Recent Activity</h3>
-        <p style={{ color: 'var(--gray-medium)', textAlign: 'center', padding: 'var(--spacing-lg)' }}>
-          Recent orders, truck updates, and system events will appear here.
-        </p>
+        {stats.recent_activity.length === 0 ? (
+          <p style={{ color: '#666', textAlign: 'center', padding: '20px' }}>
+            Recent orders, truck updates, and system events will appear here.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {stats.recent_activity.map((order) => (
+              <div
+                key={order.order_id}
+                style={{
+                  padding: '15px',
+                  backgroundColor: '#F8F5F0',
+                  borderRadius: '8px',
+                  borderLeft: `4px solid ${getStatusColor(order.order_status)}`,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                    Order #{order.order_id} - {order.customer_name}
+                  </p>
+                  <p style={{ fontSize: '0.9rem', color: '#666' }}>
+                    {order.truck_name} • {formatDate(order.order_date)}
+                  </p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p
+                    style={{
+                      fontWeight: 'bold',
+                      color: getStatusColor(order.order_status),
+                      marginBottom: '5px',
+                    }}
+                  >
+                    {order.order_status}
+                  </p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
+                    {formatCurrency(order.total_amount)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        .action-btn-filled {
+          padding: 12px 24px;
+          background-color: #D87B2A;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .action-btn-filled:hover {
+          background-color: #C06A1F;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(216, 123, 42, 0.3);
+        }
+
+        .action-btn-outline {
+          padding: 12px 24px;
+          background-color: white;
+          color: #D87B2A;
+          border: 2px solid #D87B2A;
+          border-radius: 8px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .action-btn-outline:hover {
+          background-color: #FFF5EE;
+          transform: translateY(-2px);
+        }
+      `}</style>
+    </div>
+  );
+}
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: string;
+  color: string;
+}
+
+function StatCard({ title, value, icon, color }: StatCardProps) {
+  return (
+    <div
+      style={{
+        backgroundColor: '#FFF9F0',
+        padding: '20px',
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        border: '1px solid #F0E6D2',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <p
+            style={{
+              fontSize: '0.75rem',
+              color: '#666',
+              fontWeight: 'bold',
+              marginBottom: '8px',
+              letterSpacing: '0.5px',
+            }}
+          >
+            {title}
+          </p>
+          <p style={{ fontSize: '2rem', fontWeight: 'bold', color }}>
+            {value}
+          </p>
+        </div>
+        <div style={{ fontSize: '2rem' }}>{icon}</div>
       </div>
     </div>
   );

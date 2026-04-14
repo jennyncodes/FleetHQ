@@ -3,7 +3,9 @@
 # ----------------------
 .env
 .env.*
-app.yaml
+backend/.env
+backend/app.yaml
+backend/venv/
 
 # ----------------------
 # Python cache & bytecode
