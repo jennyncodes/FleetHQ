@@ -42,7 +42,6 @@ The FleetHQ Food Truck Fleet Management System is a comprehensive database-backe
 
 ## ✨ Features
  
-## Features
 - Complete CRUD operations for trucks, menus, orders, customers
 - Automated business logic via database triggers
 - Real-time analytics dashboard
