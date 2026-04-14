@@ -212,48 +212,28 @@ All list endpoints support `?q=search_term` for filtering.
  
 ```
 FleetHQ/
-├── fleethq/                    # Flask backend
-│   ├── app.py                  # Entry point, registers all blueprints
-│   ├── config.py               # Environment-based configuration
-│   ├── db.py                   # MySQL connection helper
-│   ├── requirements.txt        # Python dependencies
-│   ├── app.yaml                # GCP App Engine deployment config
-│   ├── sql/
-│   │   ├── schema.sql          # Full MySQL schema (13 tables)
-│   │   └── seed.sql            # Sample data
-│   └── routes/
-│       ├── trucks.py           # /api/trucks CRUD
-│       ├── operations.py       # /api/locations, /api/schedules, /api/orders
-│       ├── people_ops.py       # /api/menu, /api/inventory, /api/customers, /api/staff, /api/events
-│       └── analytics.py        # /api/analytics — Phase 2 complex queries
-│
-└── fleet-hq/
-    └── frontend/               # React + TypeScript frontend
-        ├── index.html
-        ├── package.json
-        ├── vite.config.ts      # Proxies /api/* to Flask on :8080
-        ├── tsconfig.json
-        └── src/
-            ├── main.tsx        # Entry point
-            ├── App.tsx         # Router + providers
-            ├── types/          # TypeScript types for all DB tables
-            ├── api/            # Typed fetch calls for every endpoint
-            ├── hooks/          # useCrud — shared CRUD + search logic
-            ├── styles/         # CSS variables (light teal theme)
-            ├── components/
-            │   ├── ui.tsx      # Pill, Button, DataTable, Modal, Toast…
-            │   └── Layout.tsx  # IconSidebar, LeftPanel, TopBar
-            └── pages/
-                ├── Dashboard.tsx
-                ├── Trucks.tsx
-                ├── Orders.tsx
-                ├── Customers.tsx
-                ├── Inventory.tsx
-                ├── Menu.tsx
-                ├── Staff.tsx
-                ├── Analytics.tsx
-                └── FleetPages.tsx  # Locations, Schedules, Events
-```
+├── src/
+│   ├── components/
+│   │   ├── Header.tsx              # Navigation header
+│   │   └── Utility.tsx             # Toast, Loading, EmptyState, etc.
+│   ├── pages/
+│   │   ├── LandingPage.tsx        # Get started 
+│   │   ├── Dashboard.tsx          # Stats dashboard
+│   │   ├── TruckList.tsx          # Truck management (FULL CRUD)
+│   │   ├── TruckForm.tsx          # Add/Edit truck form
+│   │   ├── MenuList.tsx           # Menu management
+│   │   └── OtherPages.tsx         # Orders, Customers, etc.
+│   ├── utils/
+│   │   └── hooks.ts               # Custom hooks (useToast, useAPI)
+│   ├── styles/
+│   │   └── main.css               # Complete styling system
+│   ├── App.tsx                    # Main app with routing
+│   └── main.tsx                   # React entry point
+├── index.html                     # HTML template
+├── package.json                   # Dependencies
+├── vite.config.ts                 # Vite configuration
+├── tsconfig.json                  # TypeScript config
+└── README.md                      # This file
  
 ---
  
