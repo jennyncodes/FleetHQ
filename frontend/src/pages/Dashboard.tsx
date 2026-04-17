@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+ import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_BASE_URL = 'https://db-group4-492222.wl.r.appspot.com';
@@ -25,6 +26,7 @@ interface RecentOrder {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -135,12 +137,42 @@ export default function Dashboard() {
           Quick Actions
         </h2>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-          <button className="action-btn-filled">+ Add New Truck</button>
-          <button className="action-btn-filled">+ New Order</button>
-          <button className="action-btn-filled">+ Add Menu Item</button>
-          <button className="action-btn-outline">📅 View Schedule</button>
-          <button className="action-btn-outline">📦 Check Inventory</button>
-          <button className="action-btn-outline">📊 View Analytics</button>
+          <button 
+            className="action-btn-filled"
+            onClick={() => navigate('/trucks')}
+          >
+            + Add New Truck
+          </button>
+          <button 
+            className="action-btn-filled"
+            onClick={() => navigate('/orders')}
+          >
+            + New Order
+          </button>
+          <button 
+            className="action-btn-filled"
+            onClick={() => navigate('/menu')}
+          >
+            + Add Menu Item
+          </button>
+          <button 
+            className="action-btn-outline"
+            onClick={() => navigate('/schedule')}
+          >
+            📅 View Schedule
+          </button>
+          <button 
+            className="action-btn-outline"
+            onClick={() => navigate('/inventory')}
+          >
+            📦 Check Inventory
+          </button>
+          <button 
+            className="action-btn-outline"
+            onClick={() => navigate('/analytics')}
+          >
+            📊 View Analytics
+          </button>
         </div>
       </div>
 
