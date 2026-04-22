@@ -14,7 +14,7 @@
 
 - GitHub: Reva Kakaria - [@rkakaria (https://github.com/rkakaria)]
 
-- Github: Emily Huang - [@ (https://github.com/)]
+- Github: Emily Huang - [@huangew (https://github.com/huangew)]
 
 
 ---
