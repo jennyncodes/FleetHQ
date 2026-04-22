@@ -211,27 +211,33 @@ All list endpoints support `?q=search_term` for filtering.
  
 ```
 FleetHQ/
-├── src/
-│   ├── components/
-│   │   ├── Header.tsx              # Navigation header
-│   │   └── Utility.tsx             # Toast, Loading, EmptyState, etc.
-│   ├── pages/
-│   │   ├── LandingPage.tsx        # Get started 
-│   │   ├── Dashboard.tsx          # Stats dashboard
-│   │   ├── TruckList.tsx          # Truck management (FULL CRUD)
-│   │   ├── TruckForm.tsx          # Add/Edit truck form
-│   │   ├── MenuList.tsx           # Menu management
-│   │   └── OtherPages.tsx         # Orders, Customers, etc.
-│   ├── utils/
-│   │   └── hooks.ts               # Custom hooks (useToast, useAPI)
-│   ├── styles/
-│   │   └── main.css               # Complete styling system
-│   ├── App.tsx                    # Main app with routing
-│   └── main.tsx                   # React entry point
-├── index.html                     # HTML template
-├── package.json                   # Dependencies
-├── vite.config.ts                 # Vite configuration
-├── tsconfig.json                  # TypeScript config
+├── fleet-hq/
+│   ├── backend/
+│   │   ├── main.py                    # Flask application with all endpoints
+│   │   ├── requirements.txt           # Python dependencies
+│   │   ├── app.yaml                   # App Engine deployment config
+│   │   └── .env                       # Environment variables (local only)
+│   │
+│   └── frontend/
+│       ├── src/
+│       │   ├── components/
+│       │   │   ├── Header.tsx         # Navigation header with routing
+│       │   │   └── UtilityComponents.tsx
+│       │   ├── pages/
+│       │   │   ├── Dashboard.tsx      # Real-time metrics dashboard
+│       │   │   ├── TruckList.tsx      # Truck management with CRUD
+│       │   │   ├── TruckForm.tsx      # Add/Edit truck form
+│       │   │   ├── Analytics.tsx      # Analytics with complex queries
+│       │   │   ├── MenuList.tsx       # Menu management (stub)
+│       │   │   └── OtherPages.tsx     # Additional feature stubs
+│       │   ├── App.tsx                # Main app with React Router
+│       │   ├── main.tsx               # React entry point
+│       │   └── main.css               # Complete styling system
+│       ├── index.html                 # HTML template
+│       ├── package.json               # Frontend dependencies
+│       ├── vite.config.ts             # Vite configuration
+│       └── tsconfig.json              # TypeScript configuration
+│
 └── README.md                      # This file
  
 ---
