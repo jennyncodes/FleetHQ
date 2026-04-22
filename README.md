@@ -94,7 +94,6 @@ Before you begin, ensure you have the following installed:
    ```bash
    cd fleet-hq/frontend
    npm install
-   npm install @tanstack/react-query react-router-dom react-chartjs-2 chart.js clsx
    ```
  
 3. **Install Backend Dependencies**
@@ -114,11 +113,11 @@ You need **two terminal windows** — one for the backend, one for the frontend.
  
 **Terminal 1 — Start Flask Backend**
 ```bash
-cd fleethq
+cd fleethq/backend
 source venv/bin/activate      # Mac / Linux
 # venv\Scripts\activate       # Windows
  
-python app.py
+python main.py
 ```
 ✅ Backend will run on: `http://localhost:8080`
  
