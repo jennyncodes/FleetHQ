@@ -126,9 +126,9 @@ python main.py
 cd fleet-hq/frontend
 npm run dev
 ```
-✅ Frontend will run on: `http://localhost:3000`
+✅ Frontend will run on: `http://localhost:5173`
  
-Then open **http://localhost:3000** in your browser. Vite automatically proxies all `/api/*` requests to Flask on port 8080 — no extra configuration needed.
+Then open **http://localhost:5173** in your browser. Vite automatically proxies all `/api/*` requests to Flask on port 8080 — no extra configuration needed.
  
 ### Production Build
  
